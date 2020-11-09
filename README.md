@@ -1,4 +1,6 @@
 # Applied-programming
 Install python
-Install Flask
+Create enviroment
+Activate enviroment
+Install requirements
 Make project
