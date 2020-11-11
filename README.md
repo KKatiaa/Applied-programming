@@ -9,5 +9,4 @@ Activate enviroment
 source ./bin/activate
 
 Install requirement
-
-Make project
+pip install requirements
