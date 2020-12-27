@@ -70,3 +70,9 @@ g) get note info by note ID:
 i) get note info by pattern:
   - correct reuest:
       curl -d "text=my" -X GET  '127.0.0.1:5000/text/note'
+      
+j) edit note by another user:
+  - correct request:
+    curl -d "text=tanya second test message" -H "Content-Type: application/x-www-form-urlencoded" -X POST '127.0.0.1:5000/edit/note/3/tanya'
+  - bad request:
+    curl -d "text=tanya second test message" -H "Content-Type: application/x-www-form-urlencoded" -X POST '127.0.0.1:5000/edit/note/rrr/tanya'

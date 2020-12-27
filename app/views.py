@@ -147,7 +147,7 @@ def get_note_info_by_id(note_id):
         abort(403, 'Note id must be number!')
     note = db.session.query(Notes).filter(Notes.id==note_id).first()
     if not note:
-        abort(403, 'Note id %d does not exist!' % (note_id))
+        abort(403, 'Note id %d does not exist!' % (int(note_id)))
     note_schema = NotesSchema()
     return note_schema.dump(note)
 
@@ -158,11 +158,14 @@ def edit_note_info_by_id(note_id, username):
         abort(403, 'Note id must be number!')
     if not username:
         abort(400, 'User name is not pointed!')
+    text = request.form.get('text')
     if not text:
         abort(400, 'Text is not pointed!')
+    if len(text) > 404:
+        abort(400, 'Text is too long!')
     note = db.session.query(Notes).filter(Notes.id==note_id).first()
     if not note:
-        abort(403, 'Note id %d does not exist!' % (note_id))
+        abort(403, 'Note id %s does not exist!' % (note_id))
     user = db.session.query(UserInfo).filter(UserInfo.username==username).first()
     if not user:
         abort(400, 'User name %s does not exist!' % (username))
@@ -205,22 +208,23 @@ def get_note_by_users():
     note_id = request.form.get('note_id')
     if not note_id:
         abort(403, 'Note id is not pointed!')
-    username = request.form.get('user')
+    if not note_id.isnumeric():
+        abort(403, 'Note id must be number!')
+    user = request.form.get('user')
 
     qname = 'db.session.query(Statistics).filter(Statistics.note_id==' + note_id + ')'
     if user:
-        user = db.session.query(UserInfo).filter(UserInfo.username==username).first()
-        if not user:
-            abort(403, 'User name %s does not exist!' % (username))
-        qname += '.filter(Statistics.user_id==' + user.id + ')'
+        u = db.session.query(UserInfo).filter(UserInfo.username==user).first()
+        if not u:
+            abort(403, 'User name %s does not exist!' % (user))
+        qname += '.filter(Statistics.user_id==' + str(u.id) + ')'
     statistics = eval(qname).all()
     statistics_schema = StatisticsSchema(many=True)
-    return statistics_schema.dump(statistics)
+    return jsonify(str(statistics_schema.dump(statistics)))
 
 @app.route('/del/note/<note_id>', methods=['DELETE'])
 def del_note(note_id):
     """Delete note."""
-    note_id = request.form.get('note_id')
     if not note_id:
         abort(403, 'Note id is not pointed!')
     note = db.session.query(Notes).filter(Notes.id==note_id).first()
@@ -231,6 +235,7 @@ def del_note(note_id):
         db.session.commit()
     except Exception as e:
         abort(403, 'Delete error: %s' % (str(e)))
+    return Response(status=200)
 
 @app.route('/tag', methods=['POST'])
 def add_tag():
@@ -251,4 +256,4 @@ def show_tags():
     """Show all tags."""
     tags = db.session.query(Tags).all()
     tags_schema = TagsSchema(many=True)
-    return tags_schema.dump(tags)
+    return jsonify(str(tags_schema.dump(tags)))
